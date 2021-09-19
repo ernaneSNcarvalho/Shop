@@ -13,21 +13,23 @@ namespace Shop.Controllers
     {
         [HttpGet]
         [Route("")]
-        public async Task<ActionResult<List<Category>>> Get()
+        public async Task<ActionResult<List<Category>>> Get([FromServices]DataContext context)
         {
-            return new List<Category>();
+            var categories = await context.Categories.AsNoTracking().ToListAsync();
+            return Ok(categories);
         }
 
         [HttpGet]
         [Route("{id:int}")]
-        public async Task<ActionResult<Category>> GetById(int id)
+        public async Task<ActionResult<Category>> GetById(int id, [FromServices]DataContext context)
         {
-            return new Category();
+            var category = await context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            return Ok(category);
         }
 
         [HttpPost]
         [Route("")]
-        public async Task<ActionResult<List<Category>>> Post([FromBody] Category model, [FromServices] DataContext context)
+        public async Task<ActionResult<Category>> Post([FromServices] DataContext context, [FromBody] Category model)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -36,9 +38,9 @@ namespace Shop.Controllers
             {
                 context.Categories.Add(model);
                 await context.SaveChangesAsync();
-                return Ok(model);
+                return model;
             }
-            catch
+            catch(Exception)
             {
                 return BadRequest(new { message = "Nao foi possivel criar uma categoria" });
             }
@@ -46,7 +48,7 @@ namespace Shop.Controllers
 
         [HttpPut]
         [Route("{id:int}")]
-        public async Task<ActionResult<List<Category>>> Put(int id, [FromBody] Category model, [FromServices] DataContext context)
+        public async Task<ActionResult<List<Category>>> Put([FromServices] DataContext context, int id,  [FromBody] Category model)
         {
             if (id != model.Id)
                 return NotFound(new { message = "Categoria nao encontrada" });
